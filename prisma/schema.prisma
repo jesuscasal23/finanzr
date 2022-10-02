@@ -17,9 +17,9 @@ model Transaction {
   reciever           String
   IBAN               String?
   reference          String
-  amount             Float
-  transaction        Category? @relation(fields: [transactionId], references: [id])
-  transactionId      Int?
+  amount             Decimal
+  category           Category? @relation(fields: [categoryId], references: [id])
+  categoryId         Int?
 }
 
 model Category {

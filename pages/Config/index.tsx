@@ -1,25 +1,39 @@
 import React from 'react'
 import { Button, message } from 'antd'
+import { trpc } from '../../utils/trpc'
 
 const Config = () => {
-  // a function wich deletes all transactions from the database
-  const hanleDeleteAllTransactions = async () => {
+  const deleteTransactions = trpc.deleteAllTransactions.useMutation()
+  const deleteCategories = trpc.deleteAllCategories.useMutation()
+
+  const handleDeleteAllTransactions = async () => {
     try {
-      fetch('http://localhost:3000/api/deleteAllTransactions', {
-        method: 'DELETE',
-      })
-      message.success('deleted all transactions')
-    } catch (err) {
-      console.log(err)
+      await deleteTransactions.mutateAsync()
+      message.success('All transactions deleted')
+    } catch (error) {
+      message.error('Error deleting transactions')
+    }
+  }
+
+  const handleDeleteAllCategories = async () => {
+    try {
+      await deleteCategories.mutateAsync()
+      message.success('All categories deleted')
+    } catch (error) {
+      message.error('Error deleting categories', error)
     }
   }
 
   return (
     <div>
       <h1>Config</h1>
-      <Button onClick={hanleDeleteAllTransactions}>
+      <Button
+        onClick={handleDeleteAllTransactions}
+        style={{ marginRight: '20px' }}>
         delete All Transactions
       </Button>
+
+      <Button onClick={handleDeleteAllCategories}>delete All Categories</Button>
     </div>
   )
 }

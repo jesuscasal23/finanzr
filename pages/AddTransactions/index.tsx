@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import TransactionForm from '../../components/TransactionForm'
-import { Form, Card } from 'antd'
+import { Form, Card, message } from 'antd'
 import CSVReader from 'react-csv-reader'
-import { Transactions } from '../../prisma/types'
 import { Button } from 'antd'
+import { trpc } from '../../trpcUtils/trpc'
 
 const papaparseOptions = {
   header: true,
@@ -13,42 +13,34 @@ const papaparseOptions = {
 
 const NewTransaction = () => {
   const [formInstance] = Form.useForm()
-  const [dataToBeImported, setDataToBeImported] = useState<Transactions[]>()
+  const [dataToBeImported, setDataToBeImported] = useState<any[]>()
 
-  const handleAddTransaction = async () => {
-    const formValues = await formInstance.getFieldsValue()
-    fetch('http://localhost:3000/api/addTransaction', {
-      method: 'POST',
-      body: JSON.stringify(formValues),
-    })
-  }
-
-  const handleAddMultipleTransactions = async () => {
-    fetch('http://localhost:3000/api/addMultipleTransactions', {
-      method: 'POST',
-      body: JSON.stringify(dataToBeImported),
-    })
-  }
-
-  const hanleFileLoaded = (data: any[]) => setDataToBeImported(data)
+  const addTransaction = trpc.createTransaction.useMutation()
+  const createMultipleTransactions =
+    trpc.createMultipleTransactions.useMutation()
 
   return (
     <>
       <Card style={{ width: '80%', margin: '0 auto', marginTop: '10vh' }}>
         <TransactionForm
           formInstance={formInstance}
-          handleAddTransaction={handleAddTransaction}
+          handleAddTransaction={() => {
+            addTransaction.mutate(formInstance.getFieldsValue())
+          }}
         />
       </Card>
-
       <Card style={{ width: '80%', margin: '0 auto', marginTop: '10vh' }}>
         <CSVReader
           cssClass='react-csv-input'
-          onFileLoaded={hanleFileLoaded}
+          label='Select CSV with secret Death Star statistics'
+          onFileLoaded={(data: any[]) => setDataToBeImported(data)}
           parserOptions={papaparseOptions}
         />
-        <Button onClick={handleAddMultipleTransactions}>
-          upload Transactions
+        <Button
+          onClick={() => {
+            createMultipleTransactions.mutate(dataToBeImported)
+          }}>
+          upload
         </Button>
       </Card>
     </>

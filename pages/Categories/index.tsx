@@ -1,36 +1,58 @@
-import React, { useEffect, useState } from 'react'
-import { Button, Card, Input, message } from 'antd'
-import { Category } from '../../prisma/types'
-import { addCategory, getCategories } from './api'
+import React, { useState } from 'react'
+import { TransactionsOverview } from '../../components/TransactionsOverview'
+import CategoriesList from './CategoriesList'
+import useTransactions from '../../Hooks/useTransactions'
+import { Box, Checkbox, Input } from '@mantine/core'
 
 const Categories = () => {
-  const [newCategoryName, setNewCategoryName] = useState<string>('')
-  const [categoriesList, setCategoriesList] = useState<Category[]>([])
+  const [referenceFilterValue, setReferenceFilterValue] = useState('')
+  const [showUncategorized, setShowUncategorized] = useState(false)
+  const { transactionsWithCheck, handleSelect, loading } = useTransactions(
+    referenceFilterValue,
+    showUncategorized
+  )
 
-  useEffect(() => {
-    getCategories().then(categories => setCategoriesList(categories))
-  }, [])
-
-  const handleAddCategory = async (newCategoryName: string) => {
-    try {
-      const newCategory = await addCategory(newCategoryName)
-      setCategoriesList([...categoriesList, newCategory])
-      message.success('Category added successfully')
-    } catch (err) {
-      message.error("couldn't add category")
-    }
+  if (loading) {
+    return <h1>loading</h1>
   }
 
   return (
-    <Card>
-      <Input onChange={e => setNewCategoryName(e.target.value)} />
-      <Button onClick={() => handleAddCategory(newCategoryName)}>
-        Add Category
-      </Button>
-      {categoriesList.map(category => (
-        <h1>{category.name}</h1>
-      ))}
-    </Card>
+    <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+      <div>
+        <Box
+          sx={theme => ({
+            backgroundColor: theme.colors.dark[6],
+            padding: theme.spacing.xs,
+            borderRadius: theme.radius.md,
+            margin: theme.spacing.md,
+            marginBottom: '5px',
+            display: 'flex',
+          })}>
+          <Checkbox
+            checked={showUncategorized}
+            label={showUncategorized ? 'only show uncategorized' : 'show all'}
+            onChange={() => setShowUncategorized(!showUncategorized)}
+            style={{ margin: '0px 15px' }}
+          />
+
+          <Input
+            placeholder='Reference filter'
+            value={referenceFilterValue}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setReferenceFilterValue(e.target.value)
+            }
+          />
+        </Box>
+
+        {transactionsWithCheck && (
+          <TransactionsOverview
+            data={transactionsWithCheck}
+            handleSelect={handleSelect}
+          />
+        )}
+      </div>
+      <CategoriesList transactionsWithCheck={transactionsWithCheck} />
+    </div>
   )
 }
 
